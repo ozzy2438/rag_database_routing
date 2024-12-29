@@ -1,23 +1,29 @@
-# 📠 RAG Agent with Database Routing
+# 📠 AI News Generator with RAG & Database Integration
 
-A Streamlit application that demonstrates an advanced implementation of RAG Agent with intelligent query routing. The system combines multiple specialized databases with smart fallback mechanisms to ensure reliable and accurate responses to user queries.
+A Streamlit application that generates comprehensive blog posts about any topic using AI agents, with database integration for history tracking and RAG capabilities.
 
 ## Features
 
-- **Document Upload**: Users can upload multiple PDF documents related to a particular company. These documents are processed and stored in one of the three databases: Product Information, Customer Support & FAQ, or Financial Information.
-  
-- **Natural Language Querying**: Users can ask questions in natural language. The system automatically routes the query to the most relevant database using a phidata agent as the router.
+- **AI Content Generation**: Uses CrewAI and Cohere's Command R7B to generate well-researched blog posts
+- **Database Integration**: PostgreSQL with pgvector for storing and retrieving research history
+- **Search History**: Advanced filtering and search capabilities for past queries
+- **Data Visualization**: Interactive charts and graphs for data analysis
+- **RAG Capabilities**: Retrieval Augmented Generation for enhanced content creation
 
-- **RAG Orchestration**: Utilizes Langchain for orchestrating the retrieval augmented generation process, ensuring that the most relevant information is retrieved and presented to the user.
+## Requirements
 
-- **Fallback Mechanism**: If no relevant documents are found in the databases, a LangGraph agent with a DuckDuckGo search tool is used to perform web research and provide an answer.
+- Python 3.11
+- PostgreSQL 14+
+- pgvector extension
 
-## How to Run?
+## Installation
 
-1. **Clone the Repository**:
+1. **Create Virtual Environment**:
    ```bash
-   git clone https://github.com/Shubhamsaboo/awesome-llm-apps.git
-   cd rag_tutorials/rag_database_routing
+   python3.11 -m venv venv
+   source venv/bin/activate  # Unix/macOS
+   # or
+   .\venv\Scripts\activate  # Windows
    ```
 
 2. **Install Dependencies**:
@@ -25,49 +31,66 @@ A Streamlit application that demonstrates an advanced implementation of RAG Agen
    pip install -r requirements.txt
    ```
 
-3. **Run the Application**:
-   ```bash
-   streamlit run rag_database_routing.py
+3. **Set up PostgreSQL**:
+   ```sql
+   CREATE DATABASE ai_research_db;
+   \c ai_research_db
+   CREATE EXTENSION IF NOT EXISTS vector;
    ```
 
-4. **Get OpenAI API Key**: Obtain an OpenAI API key and set it in the application. This is required for initializing the language models used in the application.
+4. **Configure Environment**:
+   ```bash
+   cp .env.example .env
+   # Edit .env with your credentials:
+   # - Database credentials
+   # - Cohere API key
+   # - Serper API key
+   ```
 
-5. **Setup Qdrant Cloud** 
-- Visit [Qdrant Cloud](https://cloud.qdrant.io/)
-- Create an account or sign in
-- Create a new cluster
-- Get your credentials:
-   - Qdrant API Key: Found in API Keys section
-   - Qdrant URL: Your cluster URL (format: https://xxx-xxx.aws.cloud.qdrant.io)
+5. **Run the Application**:
+   ```bash
+   streamlit run news_agent.py
+   ```
 
-5. **Upload Documents**: Use the document upload section to add PDF documents to the desired database.
+## Project Structure
 
-6. **Ask Questions**: Enter your questions in the query section. The application will route your question to the appropriate database and provide an answer.
+```
+rag_database_routing/
+├── news_agent.py          # Main application with AI content generation
+├── database.py           # Database operations and connections
+├── main.py              # RAG and data visualization
+├── requirements.txt     # Project dependencies
+├── .env                # Configuration (private)
+├── .env.example        # Example configuration
+└── .gitignore         # Git ignore rules
+```
 
 ## Technologies Used
 
-- **Langchain**: For RAG orchestration, ensuring efficient retrieval and generation of information.
-- **Phidata Agent**: Used as the router agent to determine the most relevant database for a given query.
-- **LangGraph Agent**: Acts as a fallback mechanism, utilizing DuckDuckGo for web research when necessary.
-- **Streamlit**: Provides a user-friendly interface for document upload and querying.
-- **Qdrant**: Used for managing the databases, storing and retrieving document embeddings efficiently.
+- **CrewAI**: For orchestrating AI agents
+- **Cohere**: Command R7B model for content generation
+- **PostgreSQL**: Database with pgvector extension
+- **Streamlit**: User interface
+- **Plotly**: Data visualization
+- **Pandas**: Data processing
 
-## How It Works?
+## How It Works
 
-**1. Query Routing**
-The system uses a three-stage routing approach:
-- Vector similarity search across all databases
-- LLM-based routing for ambiguous queries
-- Web search fallback for unknown topics
+1. **Content Generation**
+   - User enters a topic
+   - AI agents research and generate content
+   - Results are stored in database
 
-**2. Document Processing**
-- Automatic text extraction from PDFs
-- Smart text chunking with overlap
-- Vector embedding generation
-- Efficient database storage
+2. **History Tracking**
+   - All queries and results are saved
+   - Advanced filtering and search
+   - Date-based organization
 
-**3. Answer Generation**
-- Context-aware retrieval
-- Smart document combination
-- Confidence-based responses
-- Web research integration# rag_database_routing
+3. **Data Analysis**
+   - Interactive visualizations
+   - Trend analysis
+   - Statistical insights
+
+## License
+
+MIT
