@@ -4,6 +4,8 @@ import gc
 import tempfile
 import uuid
 import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
 
 from llama_index.core import Settings
 from llama_index.llms.ollama import Ollama
@@ -46,13 +48,32 @@ def reset_chat():
 
 
 def display_file(file, file_type):
-    """Display Excel or CSV file preview"""
-    st.markdown(f"### {file_type} Preview")
+    """Display Excel or CSV file preview with visualizations"""
+    st.markdown(f"### 📑 {file_type} Preview")
     if file_type == "Excel":
         df = pd.read_excel(file)
     else:  # CSV
         df = pd.read_csv(file)
-    st.dataframe(df)
+    
+    # Veri önizlemesi
+    with st.expander("Show Data Preview", expanded=True):
+        st.dataframe(df)
+    
+    # Veri özeti
+    with st.expander("Show Data Summary", expanded=True):
+        st.markdown("#### 📊 Data Statistics")
+        st.write(df.describe())
+        
+        st.markdown("#### 📋 Column Info")
+        col_info = pd.DataFrame({
+            'Type': df.dtypes,
+            'Non-Null Count': df.count(),
+            'Null Count': df.isnull().sum()
+        })
+        st.write(col_info)
+    
+    # Görselleştirmeler
+    create_visualizations(df)
 
 
 def load_document(file_path, file_type):
@@ -87,6 +108,78 @@ def load_document(file_path, file_type):
         
         text_content = "\n".join(summary)
         return [Document(text=text_content)]
+
+
+def create_visualizations(df):
+    """Create interactive visualizations for the data"""
+    st.markdown("### 📊 Data Visualizations")
+    
+    # Sayısal ve kategorik sütunları belirle
+    numeric_cols = df.select_dtypes(include=['int64', 'float64']).columns
+    categorical_cols = df.select_dtypes(include=['object']).columns
+    
+    # Görselleştirme seçenekleri
+    viz_type = st.selectbox(
+        "Select Visualization Type",
+        ["Bar Chart", "Line Chart", "Scatter Plot", "Box Plot", "Histogram"]
+    )
+    
+    col1, col2 = st.columns(2)
+    
+    with col1:
+        x_axis = st.selectbox("Select X-axis", df.columns)
+    
+    with col2:
+        if viz_type in ["Scatter Plot"]:
+            y_axis = st.selectbox("Select Y-axis", numeric_cols)
+        else:
+            y_axis = st.selectbox("Select Y-axis (optional)", ["None"] + list(numeric_cols))
+    
+    # Renk kodlaması için kategori seçimi
+    color_col = st.selectbox("Select Color Category (optional)", ["None"] + list(categorical_cols))
+    color_col = None if color_col == "None" else color_col
+    
+    # Görselleştirmeyi oluştur
+    fig = None
+    
+    try:
+        if viz_type == "Bar Chart":
+            if y_axis == "None":
+                fig = px.bar(df, x=x_axis, color=color_col)
+            else:
+                fig = px.bar(df, x=x_axis, y=y_axis, color=color_col)
+                
+        elif viz_type == "Line Chart":
+            if y_axis == "None":
+                fig = px.line(df, x=x_axis, color=color_col)
+            else:
+                fig = px.line(df, x=x_axis, y=y_axis, color=color_col)
+                
+        elif viz_type == "Scatter Plot":
+            fig = px.scatter(df, x=x_axis, y=y_axis, color=color_col)
+            
+        elif viz_type == "Box Plot":
+            if y_axis == "None":
+                fig = px.box(df, x=x_axis, color=color_col)
+            else:
+                fig = px.box(df, x=x_axis, y=y_axis, color=color_col)
+                
+        elif viz_type == "Histogram":
+            fig = px.histogram(df, x=x_axis, color=color_col)
+        
+        # Grafik düzenlemeleri
+        fig.update_layout(
+            title=f"{viz_type} of {y_axis if y_axis != 'None' else x_axis}",
+            xaxis_title=x_axis,
+            yaxis_title=y_axis if y_axis != 'None' else "Count",
+            template="plotly_dark"
+        )
+        
+        # Grafiği göster
+        st.plotly_chart(fig, use_container_width=True)
+        
+    except Exception as e:
+        st.error(f"Error creating visualization: {str(e)}")
 
 
 with st.sidebar:
